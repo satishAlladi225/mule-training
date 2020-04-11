@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="5f609c06-7059-4bfd-8e9c-a0de4e6d11eb" >
+		<file:connection workingDir="C:\Satish\mulesoft-Training" />
+	</file:config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="8a6da847-21ed-4744-b8e4-a0f0ec888ce1" >
+		<file:connection workingDir="C:\Satish\mulesoft-Training" />
+	</file:config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="4ac66a7c-98e5-4e89-a8a2-d4b37a9e3f81" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="admin" database="dev" />
+	</db:config>
+	<flow name="test-poc-file-dbFlow" doc:id="5e3d4426-68bf-43a3-9843-fc182fdae141" >
+		<file:listener doc:name="On New or Updated File" doc:id="7e768ac9-7224-48c1-a9b4-d1bef1e0137a" config-ref="File_Config1" directory="input" autoDelete="true" moveToDirectory="archive" renameTo='test-arachive.xml'>
+			<scheduling-strategy >
+				<fixed-frequency timeUnit="SECONDS"/>
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.xml" />
+		</file:listener>
+		<logger level="INFO" doc:name="log file data" doc:id="9e817642-44d3-4ef3-977f-584ef37a749b" message="------------Appllication Started----------- #[payload]"/>
+		<db:select doc:name="retrieve data from emp-table" doc:id="fd8b17b1-5390-4caf-9157-dbeed5e3ba29" config-ref="Database_Config" target="emp">
+			<db:sql >SELECT * FROM employee</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="3be3f628-cfe2-461b-879b-ab7c2ba7d095" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.employee.*emp_data map
+{
+Line1: $.employeeAddress.addressLine1,
+Line2: $.employeeAddress.addressLine2 ,
+City: $.employeeAddress.city,
+State: $.employeeAddress.state,
+Country: $.employeeAddress.country,
+ZipCode:  $.employeeAddress.zipCode,
+CreatedDate:  now() as DateTime {format:"yyyy-MM-dd HH:mm:ss"} ,
+UpdatedDate:  now() as DateTime {format:"yyyy-MM-dd HH:mm:ss"},
+emp_Id: vars.emp[$$].Id
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="a1b6ef86-acb3-4d5b-be3a-674823b78307" message="----after conversion--- #[payload]"/>
+		<db:bulk-insert doc:name="Bulk insert" doc:id="5b201855-6b78-4a6d-a9b6-406db5957bfe" config-ref="Database_Config">
+			<db:sql >INSERT INTO address
+(Line1,
+Line2,
+City,
+State,
+Country,
+ZipCode,
+CreatedDate,
+UpdatedDate,
+emp_Id)
+VALUES
+(:Line1,
+:Line2,
+:City,
+:State,
+:Country,
+:ZipCode,
+:CreatedDate,
+:UpdatedDate,
+:emp_Id)</db:sql>
+		</db:bulk-insert>
+	</flow>
+</mule>

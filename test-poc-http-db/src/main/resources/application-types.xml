@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="json" format="json">
+      <types:shape format="weave" example="examples/emp.json"><![CDATA[%dw 2.0
+
+type json = {|
+  employeeId: Number {"typeId": "int"}, 
+  employeeName: String, 
+  employeeDOJ: String, 
+  employeeSalary: Number {"typeId": "int"}, 
+  employeeGrade: String, 
+  employeeReportingManager: String, 
+  employeeContact: {|
+    email: String, 
+    mobile: Number {"typeId": "int"}
+  |}, 
+  employeeAddress: {|
+    addressLine1: String, 
+    addressLine2: String, 
+    city: String, 
+    state: String, 
+    country: String, 
+    zipCode: String
+  |}, 
+  employeeSkills: Array<String>
+|} {"example": "{\\\"employeeId\\\":123,\\\"employeeName\\\":\\\"sampleEmpName\\\",\\\"employeeDOJ\\\":\\\"2017-11-21\\\",\\\"employeeSalary\\\":300000,\\\"employeeGrade\\\":\\\"M2\\\",\\\"employeeReportingManager\\\":\\\"sampleEmpRepMgrName\\\",\\\"employeeContact\\\":{\\\"email\\\":\\\"sample@invenio-solutions.com\\\",\\\"mobile\\\":97014},\\\"employeeAddress\\\":{\\\"addressLine1\\\":\\\"sample address line 1\\\",\\\"addressLine2\\\":\\\"sample address line 2\\\",\\\"city\\\":\\\"Hyderabad\\\",\\\"state\\\":\\\"Telangana\\\",\\\"country\\\":\\\"India\\\",\\\"zipCode\\\":\\\"12314F\\\"},\\\"employeeSkills\\\":[\\\"Java\\\",\\\"Mule\\\"]}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="output-json" format="json">
+      <types:shape format="weave" example="examples/emp-output.json"><![CDATA[%dw 2.0
+
+type output_json = {|
+  emp: {|
+    Id: Number {"typeId": "int"}, 
+    Name: String, 
+    Mobile: String, 
+    Email: Number {"typeId": "int"}, 
+    ReportingManager: String, 
+    Salary: Number {"typeId": "int"}, 
+    Grade: String, 
+    Skills: String, 
+    DOJ: String, 
+    createdDate: String, 
+    updatedDate: String
+  |}
+|} {"example": "{\\\"emp\\\":{\\\"Id\\\":123,\\\"Name\\\":\\\"sampleEmpName\\\",\\\"Mobile\\\":\\\"sample@invenio-solutions.com\\\",\\\"Email\\\":97014,\\\"ReportingManager\\\":\\\"sampleEmpRepMgrName\\\",\\\"Salary\\\":300000,\\\"Grade\\\":\\\"M2\\\",\\\"Skills\\\":\\\"Mule,Java\\\",\\\"DOJ\\\":\\\"2017-11-21\\\",\\\"createdDate\\\":\\\"2020-04-04 12:04:15\\\",\\\"updatedDate\\\":\\\"2020-04-04 12:04:15\\\"}}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#3d70db3a-0383-4656-bf54-f7817acad677">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="json"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="output-json"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

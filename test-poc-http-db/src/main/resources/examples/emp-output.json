@@ -1,0 +1,15 @@
+{
+  "emp": {
+    "Id": 123,
+    "Name": "sampleEmpName",
+    "Mobile": "sample@invenio-solutions.com",
+    "Email": 97014,
+    "ReportingManager": "sampleEmpRepMgrName",
+    "Salary": 300000,
+    "Grade": "M2",
+    "Skills": "Mule,Java",
+    "DOJ": "2017-11-21",
+    "createdDate": "2020-04-04 12:04:15",
+    "updatedDate": "2020-04-04 12:04:15"
+  }
+}

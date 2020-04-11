@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="6b477eb3-b091-4692-8146-faec1bb1bc32" >
+		<http:listener-connection host="0.0.0.0" port="8082" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="a4930529-3fc6-4af8-b3e1-f6217a1cb785" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="admin" database="dev" />
+	</db:config>
+	<flow name="test-poc-http-dbFlow" doc:id="272fcdfe-6d5e-4fdf-be28-7b25234fc281" >
+		<http:listener doc:name="Listener" doc:id="82a37dea-86ff-4a3d-84df-1f741ebfee1f" config-ref="HTTP_Listener_config" path="test-db"/>
+		<logger level="INFO" doc:name="Logger" doc:id="27e3ae4e-2862-46fe-9f20-38d32a77a922" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="0ad865c4-c65c-4ded-b2e8-4f21b5e16012" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="affectedRows" ><![CDATA[0 as Number]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="4b4a3e26-e60d-41ca-b4bf-6d30554ec349" collection="#[payload]">
+			<ee:transform doc:name="Transform Message" doc:id="3d70db3a-0383-4656-bf54-f7817acad677">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"emp": {
+		'Id': payload.employeeId,
+		'Name': payload.employeeName,
+		'Mobile': payload.employeeContact.mobile,
+		'Email': payload.employeeContact.email,
+		'ReportingManager': payload.employeeReportingManager,
+		'Salary': payload.employeeSalary,
+		'Grade': payload.employeeGrade,
+		'DOJ': payload.employeeDOJ,
+		'Skills': payload.employeeSkills reduce((value, acc) -> value ++ "," ++ acc),
+		'createdDate':  now() as DateTime {format:"yyyy-MM-dd HH:mm:ss"},
+		'updatedDate': now() as DateTime {format:"yyyy-MM-dd HH:mm:ss"}
+		
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<db:insert doc:name="Insert" doc:id="cb7443d0-09d0-4e15-a488-c9c93613e646" config-ref="Database_Config">
+			<db:sql>INSERT INTO employee
+(Id,
+Name,
+Mobile,
+Email,
+ReportingManager,
+Salary,
+Grade,
+Skills,
+createdDate,
+updatedDate,
+DOJ)
+VALUES
+(:Id,
+ :Name,
+ :Mobile,
+:Email,
+:ReportingManager,
+:Salary,
+:Grade,
+:Skills,
+:createdDate,
+:updatedDate,
+:DOJ)</db:sql>
+			<db:input-parameters><![CDATA[#[{
+	'Id': payload.emp.Id,
+'Name': payload.emp.Name,
+'Mobile': payload.emp.Mobile,
+'Email': payload.emp.Email,
+'ReportingManager': payload.emp.ReportingManager,
+'Salary': payload.emp.Salary,
+'Grade': payload.emp.Grade,
+'Skills': payload.emp.Skills,
+'createdDate': payload.emp.createdDate,
+'updatedDate': payload.emp.updatedDate,
+'DOJ': payload.emp.DOJ
+}]]]></db:input-parameters>
+		</db:insert>
+			<ee:transform doc:name="Transform Message" doc:id="61781f36-93f6-4ee3-97c5-b466f48471d9">
+			<ee:message>
+			</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="affectedRows" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.affectedRows + payload.affectedRows as Number]]></ee:set-variable>
+				</ee:variables>
+		</ee:transform>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="17825824-ef51-4bef-a40a-bccec883c78f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"affetcedRows": vars.affectedRows
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
