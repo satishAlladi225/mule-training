@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="Retrieve-employees" doc:id="b21f3361-3d4b-4cbf-a60a-b7d29b1a7c92" >
+		<logger level="INFO" doc:name="Logger" doc:id="58d2b893-d141-4d04-b10d-86e3623cc05a" message="----------------Request received------------------------------------"/>
+		<db:select doc:name="Select" doc:id="30d5516e-e091-455e-b9b7-4bf805386627" config-ref="Database_Config">
+			<db:sql >select * from employee</db:sql>
+		</db:select>
+		<db:select doc:name="Select" doc:id="f68eb7f9-30a2-4f07-9e44-15d49b4b1962" config-ref="Database_Config" target="adress">
+			<db:sql >select * from address</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="c16a3dcd-6431-4fa2-8cca-7fa5e1bb7f4f" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="result" ><![CDATA[%dw 2.0
+output application/json
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="edec3bfb-5e55-4621-8fc1-3bff0931789b" collection="#[payload]">
+			<ee:transform doc:name="Transform Message" doc:id="9bef4362-cd19-4786-b94d-dea2e10ea5d7">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var emp_add = vars.adress filter ($.emp_id ==payload.Id)
+---
+{
+   "employeeId":payload.Id,
+   "employeeName":payload.Name,
+   "employeeDOJ":payload.DOJ,
+   "employeeSalary":payload.Salary,
+   "employeeGrade":payload.Grade,
+   "employeeReportingManager":payload.ReportingManager,
+   "employeeContact":{
+      "email":payload.Email,
+      "mobile":payload.Mobile
+   },
+   "employeeAddress":{
+      "addressLine1":emp_add[0].Line1,
+      "addressLine2":emp_add[0].Line2,
+      "city":emp_add[0].City,
+      "state":emp_add[0].State,
+      "country":emp_add[0].Country,
+      "zipCode":emp_add[0].ZipCode
+   },
+   "employeeSkills": splitBy(payload.Skills,",")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<ee:transform doc:name="Transform Message" doc:id="f2124ff5-d677-4b14-9059-f63357bd642e" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="result" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.result ++ [payload]]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</foreach>
+		<set-payload value="#[vars.result]" doc:name="Set Payload" doc:id="d8bc093b-d338-4ac9-b79a-42cfa6770413" />
+		<logger level="INFO" doc:name="Logger" doc:id="cbaa856e-3e99-40cf-813b-4aee9c839a6f" message="#[payload]"/>
+	</sub-flow>
+</mule>
