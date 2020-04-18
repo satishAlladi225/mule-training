@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd ">
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
     <http:listener-config name="employee_master-httpListenerConfig">
         <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
@@ -198,63 +199,14 @@ output application/json
 		<flow-ref doc:name="Flow Reference" doc:id="825d86c4-c0e9-4755-bca6-b67795493d43" name="Retrieve-employees"/>
     </flow>
     <flow name="get:\employee\grade:employee_master-config">
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-[
-  {
-    employeeId: 123,
-    employeeName: "sampleEmpName",
-    employeeDOJ: "2017-11-21",
-    employeeSalary: 300000,
-    employeeGrade: "M2",
-    employeeReportingManager: "sampleEmpRepMgrName",
-    employeeContact: {
-      email: "sample@invenio-solutions.com",
-      mobile: 9701488100
-    },
-    employeeAddress: {
-      addressLine1: "sample address line 1",
-      addressLine2: "sample address line 2",
-      city: "Hyderabad",
-      state: "Telangana",
-      country: "India",
-      zipCode: "12314F"
-    },
-    employeeSkills: [
-      "Java", 
-      "Mule"
-    ]
-  }, 
-  {
-    employeeId: 456,
-    employeeName: "sampleEmpName",
-    employeeDOJ: "2017-06-21",
-    employeeSalary: 400000,
-    employeeGrade: "M3",
-    employeeReportingManager: "sampleEmpRepMgrName",
-    employeeContact: {
-      email: "sample1@invenio-solutions.com",
-      mobile: 9701488101
-    },
-    employeeAddress: {
-      addressLine1: "sample address line 1",
-      addressLine2: "sample address line 2",
-      city: "Hyderabad",
-      state: "Telangana",
-      country: "India",
-      zipCode: "12314F"
-    },
-    employeeSkills: [
-      "Java", 
-      "Mule"
-    ]
-  }
-]]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <ee:transform doc:name="Transform Message" doc:id="2a6277a9-8c71-4c4b-aa1d-2b26aa8a080a" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="grade" ><![CDATA[attributes.queryParams.grade as String]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="79e6eebb-e075-477e-a540-b98d0f05eacc" name="Retrieve-employees-grade"/>
     </flow>
     <flow name="get:\next_empid:employee_master-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
@@ -392,37 +344,7 @@ output application/json
                 <ee:set-variable variableName="emp_id">attributes.uriParams.'emp_id'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  employeeId: 123,
-  employeeName: "sampleEmpName",
-  employeeDOJ: "2017-11-21",
-  employeeSalary: 300000,
-  employeeGrade: "M2",
-  employeeReportingManager: "sampleEmpRepMgrName",
-  employeeContact: {
-    email: "sample@invenio-solutions.com",
-    mobile: 9701488100
-  },
-  employeeAddress: {
-    addressLine1: "sample address line 1",
-    addressLine2: "sample address line 2",
-    city: "Hyderabad",
-    state: "Telangana",
-    country: "India",
-    zipCode: "12314F"
-  },
-  employeeSkills: [
-    "Java", 
-    "Mule"
-  ]
-}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="542c2a30-4025-47ab-b205-0b71766048a5" name="retrieve-specific-employee"/>
     </flow>
     <flow name="post:\employee:application\json:employee_master-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">

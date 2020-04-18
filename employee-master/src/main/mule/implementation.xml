@@ -7,13 +7,13 @@ http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/cu
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<sub-flow name="Retrieve-employees" doc:id="b21f3361-3d4b-4cbf-a60a-b7d29b1a7c92" >
 		<logger level="INFO" doc:name="Logger" doc:id="58d2b893-d141-4d04-b10d-86e3623cc05a" message="----------------Request received------------------------------------"/>
-		<db:select doc:name="Select" doc:id="30d5516e-e091-455e-b9b7-4bf805386627" config-ref="Database_Config">
+		<db:select doc:name="retrieve Employees" doc:id="30d5516e-e091-455e-b9b7-4bf805386627" config-ref="Database_Config">
 			<db:sql >select * from employee</db:sql>
 		</db:select>
-		<db:select doc:name="Select" doc:id="f68eb7f9-30a2-4f07-9e44-15d49b4b1962" config-ref="Database_Config" target="adress">
+		<db:select doc:name="retrieve Address" doc:id="f68eb7f9-30a2-4f07-9e44-15d49b4b1962" config-ref="Database_Config" target="adress">
 			<db:sql >select * from address</db:sql>
 		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="c16a3dcd-6431-4fa2-8cca-7fa5e1bb7f4f" >
+		<ee:transform doc:name="result Variable" doc:id="c16a3dcd-6431-4fa2-8cca-7fa5e1bb7f4f" >
 			<ee:message >
 			</ee:message>
 			<ee:variables >
@@ -24,7 +24,7 @@ output application/json
 			</ee:variables>
 		</ee:transform>
 		<foreach doc:name="For Each" doc:id="edec3bfb-5e55-4621-8fc1-3bff0931789b" collection="#[payload]">
-			<ee:transform doc:name="Transform Message" doc:id="9bef4362-cd19-4786-b94d-dea2e10ea5d7">
+			<ee:transform doc:name="mapping logic" doc:id="9bef4362-cd19-4786-b94d-dea2e10ea5d7">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -53,7 +53,7 @@ var emp_add = vars.adress filter ($.emp_id ==payload.Id)
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-			<ee:transform doc:name="Transform Message" doc:id="f2124ff5-d677-4b14-9059-f63357bd642e" >
+			<ee:transform doc:name="data concatination" doc:id="f2124ff5-d677-4b14-9059-f63357bd642e" >
 				<ee:message >
 				</ee:message>
 				<ee:variables >
@@ -64,7 +64,117 @@ vars.result ++ [payload]]]></ee:set-variable>
 				</ee:variables>
 			</ee:transform>
 		</foreach>
-		<set-payload value="#[vars.result]" doc:name="Set Payload" doc:id="d8bc093b-d338-4ac9-b79a-42cfa6770413" />
+		<set-payload value="#[vars.result]" doc:name="employee_result" doc:id="d8bc093b-d338-4ac9-b79a-42cfa6770413" />
 		<logger level="INFO" doc:name="Logger" doc:id="cbaa856e-3e99-40cf-813b-4aee9c839a6f" message="#[payload]"/>
+	</sub-flow>
+	<sub-flow name="retrieve-specific-employee" doc:id="9e9a7bc8-a99b-4666-aefb-1cb5e137b2e5" >
+		<logger level="INFO" doc:name="Logger" doc:id="a6e5bc90-0704-4306-b000-80fa4e74304b" message="-----------------Request Received--------------------"/>
+		<db:select doc:name="retrieve employee" doc:id="d6821fd1-d9f4-4ad8-ae62-d813cf46ed95" config-ref="Database_Config">
+			<db:sql >select * from employee where Id = :emp_id</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	emp_id: vars.emp_id
+}]]]></db:input-parameters>
+		</db:select>
+		<db:select doc:name="retrieve address" doc:id="87a4ea25-43a4-4196-84c9-c5663dad199c" config-ref="Database_Config" target="address">
+			<db:sql >select * from address where emp_id = :emp_id</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	emp_id: vars.emp_id
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="28fc46f0-a628-4029-85d7-e945d571f9fc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+   "employeeId":payload[0].Id,
+   "employeeName":payload[0].Name,
+   "employeeDOJ":payload[0].DOJ,
+   "employeeSalary":payload[0].Salary,
+   "employeeGrade":payload[0].Grade,
+   "employeeReportingManager":payload[0].ReportingManager,
+   "employeeContact":{
+      "email":payload[0].Email,
+      "mobile":payload[0].Mobile
+   },
+   "employeeAddress":{
+      "addressLine1": vars.address[0].Line1,
+      "addressLine2":vars.address[0].Line2,
+      "city":vars.address[0].City,
+      "state":vars.address[0].State,
+      "country":vars.address[0].Country,
+      "zipCode":vars.address[0].ZipCode
+   },
+   "employeeSkills": splitBy(payload[0].Skills,",")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="555a6a22-be4a-4a2b-9058-765876b62b01" message="#[payload]"/>
+	</sub-flow>
+	<sub-flow name="Retrieve-employees-grade" doc:id="696a4817-5e7e-420c-9ea9-c24562d86fe9" >
+		<logger level="INFO" doc:name="Logger" doc:id="2e2bb47f-716f-4505-9386-74a53a98ed09" message="----------------Request received------------------------------------"/>
+		<db:select doc:name="retrieve Employees" doc:id="5be0e0f3-ceb6-4451-9882-9252b12e9d67" config-ref="Database_Config">
+			<db:sql >select * from employee where Grade = :grade</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"grade" : vars.grade default "M2"
+}]]]></db:input-parameters>
+		
+</db:select>
+		<db:select doc:name="retrieve Address" doc:id="e369a80b-ee75-444d-8605-a4c7485736bc" config-ref="Database_Config" target="adress">
+			<db:sql >select * from address</db:sql>
+		</db:select>
+		<ee:transform doc:name="result Variable" doc:id="72aef2a8-c8f7-42e7-a49f-c803ed22d3ea" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="result" ><![CDATA[%dw 2.0
+output application/json
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="06efb290-4fa6-40e8-9f02-52fae13ab59c" collection="#[payload]">
+			<ee:transform doc:name="mapping logic" doc:id="a888ff4d-b1a6-42c4-88e6-53d0f11efb7a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var emp_add = vars.adress filter ($.emp_id ==payload.Id)
+---
+{
+   "employeeId":payload.Id,
+   "employeeName":payload.Name,
+   "employeeDOJ":payload.DOJ,
+   "employeeSalary":payload.Salary,
+   "employeeGrade":payload.Grade,
+   "employeeReportingManager":payload.ReportingManager,
+   "employeeContact":{
+      "email":payload.Email,
+      "mobile":payload.Mobile
+   },
+   "employeeAddress":{
+      "addressLine1":emp_add[0].Line1,
+      "addressLine2":emp_add[0].Line2,
+      "city":emp_add[0].City,
+      "state":emp_add[0].State,
+      "country":emp_add[0].Country,
+      "zipCode":emp_add[0].ZipCode
+   },
+   "employeeSkills": splitBy(payload.Skills,",")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<ee:transform doc:name="data concatination" doc:id="806eadbe-1425-4038-809f-50d3efedd2c3" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="result" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.result ++ [payload]]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</foreach>
+		<set-payload value="#[vars.result]" doc:name="employee_result" doc:id="497190cc-2832-48cb-b436-40dd590884eb" />
+		<logger level="INFO" doc:name="Logger" doc:id="8838affe-385f-46b5-b04a-7440e843f39e" message="#[payload]"/>
 	</sub-flow>
 </mule>
