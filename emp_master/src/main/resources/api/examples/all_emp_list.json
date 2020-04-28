@@ -1,0 +1,50 @@
+[
+   {
+      "employeeId":123,
+      "employeeName":"sampleEmpName",
+      "employeeDOJ":"2017-11-21",
+      "employeeSalary":300000,
+      "employeeGrade":"M2",
+      "employeeReportingManager":"sampleEmpRepMgrName",
+      "employeeContact":{
+         "email":"sample@invenio-solutions.com",
+         "mobile":9701488100
+      },
+      "employeeAddress":{
+         "addressLine1":"sample address line 1",
+         "addressLine2":"sample address line 2",
+         "city":"Hyderabad",
+         "state":"Telangana",
+         "country":"India",
+         "zipCode":"12314F"
+      },
+      "employeeSkills":[
+         "Java",
+         "Mule"
+      ]
+   },
+   {
+      "employeeId":456,
+      "employeeName":"sampleEmpName",
+      "employeeDOJ":"2017-06-21",
+      "employeeSalary":400000,
+      "employeeGrade":"M3",
+      "employeeReportingManager":"sampleEmpRepMgrName",
+      "employeeContact":{
+         "email":"sample1@invenio-solutions.com",
+         "mobile":9701488101
+      },
+      "employeeAddress":{
+         "addressLine1":"sample address line 1",
+         "addressLine2":"sample address line 2",
+         "city":"Hyderabad",
+         "state":"Telangana",
+         "country":"India",
+         "zipCode":"12314F"
+      },
+      "employeeSkills":[
+         "Java",
+         "Mule"
+      ]
+   }
+]

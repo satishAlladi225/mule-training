@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<sub-flow name="Retrieve-employees" doc:id="b21f3361-3d4b-4cbf-a60a-b7d29b1a7c92" >
+		<logger level="INFO" doc:name="Logger" doc:id="58d2b893-d141-4d04-b10d-86e3623cc05a" message="----------------Request received------------------------------------"/>
+		<db:select doc:name="retrieve Employees" doc:id="30d5516e-e091-455e-b9b7-4bf805386627" config-ref="Database_Config">
+			<db:sql >select * from employee</db:sql>
+		</db:select>
+		<db:select doc:name="retrieve Address" doc:id="f68eb7f9-30a2-4f07-9e44-15d49b4b1962" config-ref="Database_Config" target="adress">
+			<db:sql >select * from address</db:sql>
+		</db:select>
+		<flow-ref doc:name="Flow Reference" doc:id="183047c9-0484-4ab2-95e2-5ee5c445a9f2" name="retrieve-implementationSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="cbaa856e-3e99-40cf-813b-4aee9c839a6f" message="#[payload]"/>
+	</sub-flow>
+	<sub-flow name="retrieve-specific-employee" doc:id="9e9a7bc8-a99b-4666-aefb-1cb5e137b2e5" >
+		<logger level="INFO" doc:name="Logger" doc:id="a6e5bc90-0704-4306-b000-80fa4e74304b" message="-----------------Request Received--------------------"/>
+		<db:select doc:name="retrieve employee" doc:id="d6821fd1-d9f4-4ad8-ae62-d813cf46ed95" config-ref="Database_Config">
+			<db:sql >select * from employee where Id = :emp_id</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	emp_id: vars.emp_id
+}]]]></db:input-parameters>
+		</db:select>
+		<db:select doc:name="retrieve address" doc:id="87a4ea25-43a4-4196-84c9-c5663dad199c" config-ref="Database_Config" target="address">
+			<db:sql >select * from address where emp_id = :emp_id</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	emp_id: vars.emp_id
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="28fc46f0-a628-4029-85d7-e945d571f9fc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+   "employeeId":payload[0].Id,
+   "employeeName":payload[0].Name,
+   "employeeDOJ":payload[0].DOJ,
+   "employeeSalary":payload[0].Salary,
+   "employeeGrade":payload[0].Grade,
+   "employeeReportingManager":payload[0].ReportingManager,
+   "employeeContact":{
+      "email":payload[0].Email,
+      "mobile":payload[0].Mobile
+   },
+   "employeeAddress":{
+      "addressLine1": vars.address[0].Line1,
+      "addressLine2":vars.address[0].Line2,
+      "city":vars.address[0].City,
+      "state":vars.address[0].State,
+      "country":vars.address[0].Country,
+      "zipCode":vars.address[0].ZipCode
+   },
+   "employeeSkills": splitBy(payload[0].Skills,",")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="555a6a22-be4a-4a2b-9058-765876b62b01" message="#[payload]"/>
+	</sub-flow>
+	<sub-flow name="Retrieve-employees-grade" doc:id="696a4817-5e7e-420c-9ea9-c24562d86fe9" >
+		<logger level="INFO" doc:name="Logger" doc:id="2e2bb47f-716f-4505-9386-74a53a98ed09" message="----------------Request received------------------------------------"/>
+		<db:select doc:name="retrieve Employees" doc:id="5be0e0f3-ceb6-4451-9882-9252b12e9d67" config-ref="Database_Config">
+			<db:sql >select * from employee where Grade = :grade</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"grade" : vars.grade default "M2"
+}]]]></db:input-parameters>
+		
+</db:select>
+		<db:select doc:name="retrieve Address" doc:id="e369a80b-ee75-444d-8605-a4c7485736bc" config-ref="Database_Config" target="adress">
+			<db:sql >select * from address</db:sql>
+		</db:select>
+		<flow-ref doc:name="Flow Reference" doc:id="744abda9-4db5-428d-be2c-7ca5e50471c5" name="retrieve-implementationSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="8838affe-385f-46b5-b04a-7440e843f39e" message="#[payload]"/>
+	</sub-flow>
+		<sub-flow name="Retrieve-employees-RM" doc:id="b9194690-6d14-4325-9193-07149099cec9" >
+		<logger level="INFO" doc:name="Logger" doc:id="8a377c93-b2aa-484b-9bb0-879b87fa6471" message="----------------Request received------------------------------------"/>
+		<db:select doc:name="retrieve Employees" doc:id="041d8765-d290-4398-8079-5b83ee5ef3a0" config-ref="Database_Config">
+			<db:sql >select * from employee where ReportingManager = :ReportingManager</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"ReportingManager" : vars.reportingManager
+}]]]></db:input-parameters>
+		
+</db:select>
+		<db:select doc:name="retrieve Address" doc:id="6bc5f484-d8d7-4b68-8d4c-4b7ab10e39af" config-ref="Database_Config" target="adress">
+			<db:sql >select * from address</db:sql>
+		</db:select>
+		<flow-ref doc:name="Flow Reference" doc:id="58ca20f9-3afb-47e1-81ab-5b966f8db4f0" name="retrieve-implementationSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="ef25f7d3-52b0-47ee-b6bf-010c25682d1a" message="#[payload]"/>
+	</sub-flow>
+	<sub-flow name="Retrieve-employee-salary" doc:id="afaee4c3-e3f0-44f6-93b4-b8372f651542" >
+		<logger level="INFO" doc:name="Logger" doc:id="e4ab8c22-6f5b-4270-a75b-b4bea5f3be3c" message="----------------------------Request Received-------------------------"/>
+		<choice doc:name="Choice" doc:id="5bca5076-5f32-4dbe-b854-83759a5018e3" >
+			<when expression='#[vars.emp_salary.operator == "lower"]'>
+				<db:select doc:name="Select" doc:id="d9ae3224-38d6-40b4-86db-63ad3654cbea" config-ref="Database_Config">
+					<db:sql >select * from employee where Salary &lt;= :salary</db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	salary: vars.emp_salary.salary
+}]]]></db:input-parameters>
+				</db:select>
+				<db:select doc:name="Select" doc:id="3a49719b-5a5e-446d-bf95-c93299f3873e" config-ref="Database_Config" target="adress">
+					<db:sql >select * from address</db:sql>
+				</db:select>
+				<flow-ref doc:name="Flow Reference" doc:id="8f0dbc69-b36f-45a3-b2ee-e6fb314f6ec2" name="retrieve-implementationSub_Flow"/>
+			</when>
+			<otherwise >
+				<db:select doc:name="Select" doc:id="d4506732-17a3-428f-b0e7-cac30786d95f" config-ref="Database_Config">
+					<db:sql >select * from employee where Salary &gt;= :salary</db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	salary: vars.emp_salary.salary
+}]]]></db:input-parameters>
+				</db:select>
+				<db:select doc:name="Select" doc:id="c91bd238-1894-4420-8383-ce1793836c09" config-ref="Database_Config" target="adress">
+					<db:sql >select * from address </db:sql>
+				</db:select>
+				<flow-ref doc:name="Flow Reference" doc:id="7e365eb9-efad-4138-b4a9-0132cd2c9822" name="retrieve-implementationSub_Flow"/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+		<sub-flow name="Retrieve-employee-tenure" doc:id="825cb5bb-cc0f-468d-81aa-41ecd48696f6" >
+		<logger level="INFO" doc:name="Logger" doc:id="019b01c0-ce4c-43ce-80dd-ec2dc139d41b" message="----------------------------Request Received-------------------------"/>
+		<choice doc:name="Choice" doc:id="9289239d-1e86-4906-9f8b-5c99c2efc411" >
+			<when expression='#[vars.tenure.operator == "lower"]'>
+				<db:select doc:name="Select" doc:id="efb2922a-11c3-4ab5-a406-efa7789bad72" config-ref="Database_Config">
+					<db:sql >select * from employee where DOJ &gt;= :tenure</db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	tenure: vars.tenure_date
+}]]]></db:input-parameters>
+				</db:select>
+				<db:select doc:name="Select" doc:id="35324fdc-47db-497a-82e0-43e35cdcba46" config-ref="Database_Config" target="adress">
+					<db:sql >select * from address</db:sql>
+				</db:select>
+				<flow-ref doc:name="Flow Reference" doc:id="e8cefd1a-ad69-4207-b22b-0712d997812d" name="retrieve-implementationSub_Flow"/>
+			</when>
+			<otherwise >
+				<db:select doc:name="Select" doc:id="1b192d69-81c4-483f-a7fc-da027ba99fb6" config-ref="Database_Config">
+					<db:sql >select * from employee where DOJ &lt;= :tenure</db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	tenure: vars.tenure_date
+}]]]></db:input-parameters>
+				</db:select>
+				<db:select doc:name="Select" doc:id="b71fc989-9b15-4361-ab4f-d1ab79feddf4" config-ref="Database_Config" target="adress">
+					<db:sql >select * from address </db:sql>
+				</db:select>
+				<flow-ref doc:name="Flow Reference" doc:id="0cc2f309-fe2e-45b9-b977-80e0c326ab4c" name="retrieve-implementationSub_Flow"/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<sub-flow name="retrieve-next-empID" doc:id="8f4d45f3-8497-4780-942b-528bb7d177e4" >
+		<logger level="INFO" doc:name="Logger" doc:id="b56ac8ae-d94a-4adf-a8dd-dc15b8d0b6b0" message="---------------------------Request Received ----------------------------"/>
+		<db:select doc:name="Select" doc:id="65165a59-63c9-4a00-bd74-da0fa1e5c742" config-ref="Database_Config">
+			<db:sql >select ID from employee order by ID desc limit 1</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="9aed4f32-8a63-49fb-9efb-5aa0606acd1e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+Id:payload[0].ID +1
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="create-employee" doc:id="052ee288-b085-4b12-a065-37a5209d468d">
+		<logger level="INFO" doc:name="Logger" doc:id="d721c952-192c-4336-96ad-2b00bd60e3d5" message="------------------------Request Received---------------" />
+		<ee:transform doc:name="Transform Message" doc:id="862b8800-0ff7-45e2-a6bc-8a4685289e5c">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="result"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	RowsInserted: 0 as Number
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="0b72ee16-1956-4fc3-aa8a-d0f1da5f57a1" collection="payload">
+			<ee:transform doc:name="Transform Message" doc:id="463b5056-41ec-4fd1-9b4e-162db0d2ccf2">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"emp": {
+		'Id': payload.employeeId,
+		'Name': payload.employeeName,
+		'Mobile': payload.employeeContact.mobile,
+		'Email': payload.employeeContact.email,
+		'ReportingManager': payload.employeeReportingManager,
+		'Salary': payload.employeeSalary,
+		'Grade': payload.employeeGrade,
+		'DOJ': payload.employeeDOJ,
+		'Skills': payload.employeeSkills reduce((value, acc) -> value ++ "," ++ acc),
+		'createdDate':  now() as DateTime {format:"yyyy-MM-dd HH:mm:ss"},
+		'updatedDate': now() as DateTime {format:"yyyy-MM-dd HH:mm:ss"}
+		
+	},
+	add:{
+		
+		Line1: payload.employeeAddress.addressLine1,
+		Line2: payload.employeeAddress.addressLine2 ,
+		City: payload.employeeAddress.city,
+		State: payload.employeeAddress.state,
+		Country: payload.employeeAddress.country,
+		ZipCode:  payload.employeeAddress.zipCode,
+		CreatedDate:  now() as DateTime {format:"yyyy-MM-dd HH:mm:ss"} ,
+		UpdatedDate:  now() as DateTime {format:"yyyy-MM-dd HH:mm:ss"},
+		emp_Id: payload.employeeId
+		
+	}
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<db:insert doc:name="employee" doc:id="8d99d2e6-b8b6-429e-81c6-10b921aa6d4a" config-ref="Database_Config" target="employee">
+				<db:sql>INSERT INTO employee
+(Id,
+Name,
+Mobile,
+Email,
+ReportingManager,
+Salary,
+Grade,
+Skills,
+createdDate,
+updatedDate,
+DOJ)
+VALUES
+(:Id,
+ :Name,
+ :Mobile,
+:Email,
+:ReportingManager,
+:Salary,
+:Grade,
+:Skills,
+:createdDate,
+:updatedDate,
+:DOJ)</db:sql>
+				<db:input-parameters><![CDATA[#[{
+	'Id': payload.emp.Id,
+'Name': payload.emp.Name,
+'Mobile': payload.emp.Mobile,
+'Email': payload.emp.Email,
+'ReportingManager': payload.emp.ReportingManager,
+'Salary': payload.emp.Salary,
+'Grade': payload.emp.Grade,
+'Skills': payload.emp.Skills,
+'createdDate': payload.emp.createdDate,
+'updatedDate': payload.emp.updatedDate,
+'DOJ': payload.emp.DOJ
+}]]]></db:input-parameters>
+			</db:insert>
+			<db:insert doc:name="Insert" doc:id="284359c6-6b7c-490f-9f34-c913dcbe1fcc" config-ref="Database_Config" target="address">
+				<db:sql>INSERT INTO address
+(Line1,
+Line2,
+City,
+State,
+Country,
+ZipCode,
+CreatedDate,
+UpdatedDate,
+emp_Id)
+VALUES
+(:Line1,
+:Line2,
+:City,
+:State,
+:Country,
+:ZipCode,
+:CreatedDate,
+:UpdatedDate,
+:emp_Id)</db:sql>
+				<db:input-parameters><![CDATA[#[{
+Line1 : payload.add.Line1,
+Line2 : payload.add.Line2,
+City : payload.add.City,
+State : payload.add.State,
+Country : payload.add.Country,
+ZipCode : payload.add.ZipCode,
+CreatedDate : payload.add.CreatedDate,
+UpdatedDate : payload.add.UpdatedDate,
+emp_Id: payload.add.emp_Id
+}]]]></db:input-parameters>
+			</db:insert>
+			<ee:transform doc:name="Transform Message" doc:id="6690f166-fbf7-4805-91c2-57bfeffdf31d">
+				<ee:message>
+				</ee:message>
+				<ee:variables>
+					<ee:set-variable variableName="result"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"RowsInserted": if(vars.employee.affectedRows == vars.address.affectedRows) vars.result.RowsInserted as Number + vars.employee.affectedRows as Number else null
+}]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="e303a80f-55ab-4e42-ad10-3432fe0913a6">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Status": "Successfully Proccessed",
+	"RowsInserted": vars.result.RowsInserted
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+</mule>

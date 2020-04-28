@@ -1,0 +1,30 @@
+#%RAML 1.0 DataType
+properties:
+  employeeId:
+    type: integer
+    required: true
+  employeeName:
+    type: string
+    required: true
+    maxLength: 50
+  employeeDOJ:
+    required: true
+    type: date-only
+  employeeSalary:
+    type: integer
+    required: true
+  employeeGrade:
+    type: string
+    required: true
+    enum: [M1,M2,M3,M4,M5,M6]
+  employeeReportingManager:
+    type: string
+    required: false
+  employeeContact:
+    properties:
+      email:
+        type: string
+        required: true
+      mobile:
+        type: integer
+        required: true

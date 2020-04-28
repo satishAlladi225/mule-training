@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<sub-flow name="retrieve-implementationSub_Flow" doc:id="f7c6b218-4628-41c9-8d6e-908610625750" >
+			<ee:transform doc:name="result Variable" doc:id="762a4900-18a1-49d5-a3e3-a02267246a7c" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="result" ><![CDATA[%dw 2.0
+output application/json
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="87e275c1-383b-4c25-8c16-93ce41481800" collection="#[payload]">
+			<ee:transform doc:name="mapping logic" doc:id="6a07ffd6-6ebc-4442-b386-cdbaa891594a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var emp_add = vars.adress filter ($.emp_id ==payload.Id)
+---
+{
+   "employeeId":payload.Id,
+   "employeeName":payload.Name,
+   "employeeDOJ":payload.DOJ,
+   "employeeSalary":payload.Salary,
+   "employeeGrade":payload.Grade,
+   "employeeReportingManager":payload.ReportingManager,
+   "employeeContact":{
+      "email":payload.Email,
+      "mobile":payload.Mobile
+   },
+   "employeeAddress":{
+      "addressLine1":emp_add[0].Line1,
+      "addressLine2":emp_add[0].Line2,
+      "city":emp_add[0].City,
+      "state":emp_add[0].State,
+      "country":emp_add[0].Country,
+      "zipCode":emp_add[0].ZipCode
+   },
+   "employeeSkills": splitBy(payload.Skills,",")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<ee:transform doc:name="data concatination" doc:id="cd5899e0-cae9-4999-b7c9-52ac0ead4004" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="result" ><![CDATA[%dw 2.0
+output application/json
+---
+vars.result ++ [payload]]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</foreach>
+		<set-payload value="#[vars.result]" doc:name="employee_result" doc:id="d64928da-cce9-4609-be03-a1522040eb53" />
+	</sub-flow>
+</mule>

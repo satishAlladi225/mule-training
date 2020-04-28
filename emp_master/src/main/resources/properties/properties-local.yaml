@@ -1,0 +1,6 @@
+db:
+  host: "localhost"
+  port: "3306"
+  schema: "dev"
+  password: "![6OOegMg5RnXQg4fdLswETw==]"
+  user: "root"

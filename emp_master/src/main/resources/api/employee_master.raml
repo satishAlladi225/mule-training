@@ -1,0 +1,76 @@
+#%RAML 1.0
+title: Employee Master
+baseUri: http://localhost:8081/emp/v1
+description: This API deals with employee master data
+mediaType:
+  - application/json
+protocols:
+  - HTTP
+types:
+  emp_data: !include data_types/dataType.raml
+resourceTypes:
+  emp : !include resource_types/resourceType.raml
+traits:
+  get_respones: !include traits/trait.raml
+  error_response: !include exchange_modules/b8229ea0-cd1c-4b23-a0ad-82d1cbff6313/error_respones_data/1.0.0/error_respones_data.raml
+  client_credentials: !include exchange_modules/b8229ea0-cd1c-4b23-a0ad-82d1cbff6313/client_credentials/1.0.1/client_credentials.raml
+  
+/employee:
+  type: emp        
+  /{emp_id}:
+    get:
+      is: [client_credentials]
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/single_emp.json   
+  /grade:
+    get:
+      queryParameters:
+        grade:
+          required: true
+          type: string
+          enum: [M1,M2,M3,M4,M5,M6]
+    is: [get_respones , client_credentials]
+  /RM:
+    get:
+      queryParameters:
+        Report_Manager:
+          required:  true
+          type: string
+          maxLength: 50
+      is: [get_respones , client_credentials]         
+  /tenure:
+    get:
+      queryParameters:
+        tenure:
+          type: integer
+          required: true
+        operator:
+          required: true
+          type: string
+          enum: [lower,higher]
+      is: [get_respones, client_credentials]
+  /salary:
+    get:
+      queryParameters:
+        salary:
+          type: integer
+          required: true
+        operator:
+          required: true
+          type: string
+          enum: [lower,higher]
+      is: [get_respones, client_credentials]
+/next_empid:
+  get:
+    is:
+      - client_credentials:
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              {"id":123}
+    
