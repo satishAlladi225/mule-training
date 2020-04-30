@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9c6edc0c-6ae7-4787-bdaf-e85c0aa75271" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<os:config name="ObjectStore_Config" doc:name="ObjectStore Config" doc:id="dd7242a3-b81b-4b0f-b96f-553e718d6b80" />
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="6d7cf0d5-9d17-4d13-a7d3-71281e0dcf5f" config-ref="ObjectStore_Config" />
+	<flow name="test-poc-osFlow" doc:id="23aecbee-efb4-44eb-b1d7-891272c6dec6" >
+		<http:listener doc:name="Listener" doc:id="addbfd17-5e39-4f56-80c4-1e90d4796de0" config-ref="HTTP_Listener_config" path="test"/>
+		<os:store doc:name="Store" doc:id="0dad01b2-c0b6-472c-b3b8-ce585d470443" key="testData" objectStore="Object_store"/>
+		<logger level="INFO" doc:name="Logger" doc:id="9b9bd968-0bf6-4667-874a-606cc58790a4" message="application  after OS"/>
+		<os:retrieve doc:name="Retrieve" doc:id="6cb2c201-ad11-4946-b722-88c1677fdf77" key="testData" objectStore="Object_store" target="data">
+			<os:default-value ><![CDATA[empty]]></os:default-value>
+		</os:retrieve>
+		<logger level="INFO" doc:name="Logger" doc:id="43c5e3de-d729-4227-946c-9d1a9f39c1ed" message="#[vars.data]"/>
+	</flow>
+	<flow name="test-poc-osFlow1" doc:id="6423fe82-20fe-4d49-8328-1168ced40982" >
+		<http:listener doc:name="Listener" doc:id="81cb731b-7943-4287-b564-afd0f58e209d" config-ref="HTTP_Listener_config" path="test1"/>
+		<os:retrieve doc:name="Retrieve" doc:id="f144540b-675c-4874-ac33-e9fe2134ab8d" key="testData" objectStore="Object_store">
+			<os:default-value ><![CDATA[empty]]></os:default-value>
+		</os:retrieve>
+		<logger level="INFO" doc:name="Logger" doc:id="9d377f06-8eda-436b-a376-010a6fddfd7c" message="#[payload]"/>
+	</flow>
+</mule>
